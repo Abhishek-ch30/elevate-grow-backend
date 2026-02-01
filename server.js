@@ -91,10 +91,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes - Fixed order: general routes before specific ones
-app.use('/api', publicRoutes);
+// API Routes - Correct order: specific routes before general catch-all
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', publicRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
