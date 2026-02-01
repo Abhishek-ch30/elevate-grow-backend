@@ -110,6 +110,44 @@ router.get('/health', (req, res) => {
 });
 
 /**
+ * @route   GET /api
+ * @desc    API root endpoint with documentation
+ * @access  Public
+ */
+router.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'QThink Solutions API',
+    version: '1.0.0',
+    description: 'Production-grade backend with RBAC and PostgreSQL RLS',
+    documentation: {
+      health: '/api/health',
+      info: '/api/info',
+      endpoints: {
+        public: [
+          'POST /api/signup - User registration',
+          'POST /api/login - User/Admin login',
+          'POST /api/logout - Logout',
+          'POST /api/contact - Contact form submission',
+          'GET /api/health - Health check',
+          'GET /api/info - Detailed API information',
+          'GET /api/training-programs - Available training programs',
+          'GET /api/training-programs/:id - Training program details'
+        ],
+        protected: [
+          'POST /api/admin/signup - Admin registration (requires secret)',
+          'GET /api/verify-token - Token verification',
+          'POST /api/refresh-token - Token refresh',
+          'GET /api/user/* - User endpoints (requires authentication)',
+          'GET /api/admin/* - Admin endpoints (requires admin role)'
+        ]
+      }
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
  * @route   GET /api/info
  * @desc    API information
  * @access  Public
