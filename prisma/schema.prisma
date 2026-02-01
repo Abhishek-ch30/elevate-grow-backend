@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User role enum
+enum Role {
+  user
+  admin
+}
+
+// User profession enum
+enum Profession {
+  student
+  professional
+}
+
+model User {
+  id         String      @id @default(uuid())
+  full_name  String      @map("full_name")
+  email      String      @unique
+  password   String
+  phone      String?     // Changed from Number to String for better handling
+  profession Profession?
+  college    String?
+  company    String?
+  role       Role        @default(user)
+  is_admin   Boolean     @default(false) @map("is_admin")
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+
+  // Relations
+  enrollments       Enrollment[]
+  payments          Payment[]
+  certificates      Certificate[]
+  admin_logs        AdminActivityLog[]
+
+  @@map("users")
+}
+
+model TrainingProgram {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  duration    String?
+  price       Float    @default(0)
+  is_active   Boolean  @default(true) @map("is_active")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  enrollments  Enrollment[]
+  payments     Payment[]
+  certificates Certificate[]
+
+  @@map("training_programs")
+}
+
+// Enrollment status enum
+enum EnrollmentStatus {
+  pending_payment
+  enrolled
+  completed
+}
+
+model Enrollment {
+  id          String           @id @default(uuid())
+  user_id     String
+  training_id String
+  status      EnrollmentStatus @default(pending_payment)
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [user_id], references: [id])
+  training_program TrainingProgram @relation(fields: [training_id], references: [id])
+
+  @@unique([user_id, training_id])
+  @@map("enrollments")
+}
+
+// Payment status enum
+enum PaymentStatus {
+  pending_verification
+  verified
+  failed
+  refunded
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  user_id               String
+  training_id           String
+  amount                Float
+  payment_method        String        @map("payment_method")
+  transaction_reference String?       @map("transaction_reference")
+  status                PaymentStatus @default(pending_verification)
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [user_id], references: [id])
+  training_program TrainingProgram @relation(fields: [training_id], references: [id])
+
+  @@map("payments")
+}
+
+model Certificate {
+  id             String   @id @default(uuid())
+  user_id        String
+  training_id    String
+  certificate_id String   @unique @map("certificate_id")
+  issue_date     DateTime @map("issue_date")
+  file_url       String?  @map("file_url")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [user_id], references: [id])
+  training_program TrainingProgram @relation(fields: [training_id], references: [id])
+
+  @@unique([user_id, training_id])
+  @@map("certificates")
+}
+
+model AdminActivityLog {
+  id            String   @id @default(uuid())
+  admin_id      String
+  action        String
+  resource_type String   @map("resource_type")
+  resource_id   String?  @map("resource_id")
+  details       Json?
+  ip_address    String?  @map("ip_address")
+  created_at    DateTime @default(now())
+
+  // Relations
+  admin User @relation(fields: [admin_id], references: [id])
+
+  @@map("admin_activity_logs")
+}
+
+// Contact message status enum
+enum MessageStatus {
+  new
+  read
+  replied
+  archived
+}
+
+model ContactMessage {
+  id         String        @id @default(uuid())
+  full_name  String        @map("full_name")
+  email      String
+  subject    String
+  message    String
+  status     MessageStatus @default(new)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+
+  @@map("contact_messages")
+}
